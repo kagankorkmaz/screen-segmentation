@@ -17,15 +17,13 @@ dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
 data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)
-joined = data.join(data, lsuffix="_x", rsuffix="_y")
-print("Joined",joined)
-# quit()
 data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
 data = data.drop(columns=["_id", "x1", "y1", "x2", "y2"])
-# print(dataOrg.loc[1, '_id'])
-# quit()
-print(data)
 
+joined = data.join(data, lsuffix="_x", rsuffix="_y")
+print("Joined:\n", joined)
+print("data:\n" ,data)
+quit()
 numClustersStart = 2
 numClustersEnd = 5
 step = 1
