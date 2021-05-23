@@ -15,12 +15,16 @@ from collections import Counter, defaultdict, OrderedDict
 dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
-data = data.drop(columns=["_id"])
+data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
+data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)
+data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
+data = data.drop(columns=["_id", "x1", "y1", "x2", "y2"])
 # print(dataOrg.loc[1, '_id'])
 # quit()
+print(data)
 
 numClustersStart = 2
-numClustersEnd = 10
+numClustersEnd = 5
 step = 1
 tol = 1e-04
 maxIter = 300
@@ -54,13 +58,14 @@ for n_clusters in range(numClustersStart, numClustersEnd, step):
     )
     print("For n_clusters =", n_clusters, "The distortion is :", km.inertia_)
     dictionary = {}
-    print(n_clusters ,"clusters:")
+    print(n_clusters, "clusters:")
     for i in range(n_clusters):
         dictionary[i] = []
     for i in range(len(cluster_labels)):
         dictionary[cluster_labels[i]].append(dataOrg.loc[i, "_id"])
     print(dictionary)
     print("------------------------------\n")
+
 
 plt.cla()
 plt.clf()
