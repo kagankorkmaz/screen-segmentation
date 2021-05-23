@@ -18,8 +18,15 @@ data = dataOrg.copy()
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
 data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)
 data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
-data = data.drop(columns=["_id", "x1", "y1", "x2", "y2"])
+data = data.drop(columns=["x1", "y1", "x2", "y2"])
+data2 = data
 
+data['key'] = 1
+data2['key'] = 1
+result = pd.merge(data,data2,on='key').drop('key',1)
+result = result[result['_id_x'] != result['_id_y']]
+print(result)
+quit()
 joined = data.join(data, lsuffix="_x", rsuffix="_y")
 print("Joined:\n", joined)
 print("data:\n" ,data)
