@@ -15,10 +15,9 @@ from collections import Counter, defaultdict, OrderedDict
 dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
-data = data.drop(columns=['_id'])
-print(data)
-quit()
-
+data = data.drop(columns=["_id"])
+# print(dataOrg.loc[1, '_id'])
+# quit()
 
 numClustersStart = 2
 numClustersEnd = 10
@@ -43,7 +42,7 @@ for n_clusters in range(numClustersStart, numClustersEnd, step):
     if not os.path.exists(path):
         os.mkdir(path)
     startEndPath = str(numClustersStart) + "-" + str(numClustersEnd)
-    visualizer.show(outpath="./" + opath + "/" + str(n_clusters) + ".png") #TODO
+    visualizer.show(outpath="./" + opath + "/" + str(n_clusters) + ".png")  # TODO
     plt.cla()
     plt.clf()
     plt.close("all")
@@ -54,7 +53,14 @@ for n_clusters in range(numClustersStart, numClustersEnd, step):
         silhouette_avg,
     )
     print("For n_clusters =", n_clusters, "The distortion is :", km.inertia_)
-
+    dictionary = {}
+    print(n_clusters ,"clusters:")
+    for i in range(n_clusters):
+        dictionary[i] = []
+    for i in range(len(cluster_labels)):
+        dictionary[cluster_labels[i]].append(dataOrg.loc[i, "_id"])
+    print(dictionary)
+    print("------------------------------\n")
 
 plt.cla()
 plt.clf()
