@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+import sklearn
+
+# import tensorflow
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from scipy import stats
+from sklearn.metrics import silhouette_samples, silhouette_score
+import matplotlib.cm as cm
+from yellowbrick.cluster import SilhouetteVisualizer
+import os
+from collections import Counter, defaultdict, OrderedDict
+
+dataPath = "./data/kodi-base.csv"
+dataOrg = pd.read_csv(dataPath)
+data = dataOrg.copy()
+data = data.drop(columns=['_id'])
+print(data)
+quit()
+
+
+numClustersStart = 2
+numClustersEnd = 10
+step = 1
+tol = 1e-04
+maxIter = 300
+distortions = []
+
+for n_clusters in range(numClustersStart, numClustersEnd, step):
+    km = KMeans(
+        n_clusters=n_clusters, init="k-means++", n_init=10, max_iter=maxIter, tol=tol
+    )
+    visualizer = SilhouetteVisualizer(km, colors="yellowbrick")
+    visualizer.fit(np.array(data))
+    km.fit(data)
+    distortions.append(km.inertia_)
+    cluster_labels = km.predict(data)
+    silhouette_avg = silhouette_score(data, cluster_labels)
+
+    opath = str(1)
+    path = os.path.join("./", opath)
+    if not os.path.exists(path):
+        os.mkdir(path)
+    startEndPath = str(numClustersStart) + "-" + str(numClustersEnd)
+    visualizer.show(outpath="./" + opath + "/" + str(n_clusters) + ".png") #TODO
+    plt.cla()
+    plt.clf()
+    plt.close("all")
+    print(
+        "For n_clusters =",
+        n_clusters,
+        "The average silhouette_score is :",
+        silhouette_avg,
+    )
+    print("For n_clusters =", n_clusters, "The distortion is :", km.inertia_)
+
+
+plt.cla()
+plt.clf()
+plt.close("all")
+plt.plot(range(numClustersStart, numClustersEnd, step), distortions, marker="o")
+plt.xlabel("Number of clusters")
+plt.ylabel("Distortion")
+# plt.show()
+plt.savefig("./" + opath + "/" + startEndPath + "-distortion")
+plt.close("all")
