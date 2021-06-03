@@ -136,61 +136,9 @@ for i in range(len(only_id)):
 # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
 #     print(only_id)
 
-for i in range(len(clusters)):
-    print(i)
-    pprint(clusters[i])
-    print("--------------------------------")
+# for i in range(len(clusters)):
+#     print(i)
+#     pprint(clusters[i])
+#     print("--------------------------------")
+
 quit()
-numClustersStart = 2
-numClustersEnd = 5
-step = 1
-tol = 1e-04
-maxIter = 300
-distortions = []
-
-for n_clusters in range(numClustersStart, numClustersEnd, step):
-    km = KMeans(
-        n_clusters=n_clusters, init="k-means++", n_init=10, max_iter=maxIter, tol=tol
-    )
-    visualizer = SilhouetteVisualizer(km, colors="yellowbrick")
-    visualizer.fit(np.array(data))
-    km.fit(data)
-    distortions.append(km.inertia_)
-    cluster_labels = km.predict(data)
-    silhouette_avg = silhouette_score(data, cluster_labels)
-
-    opath = str(1)
-    path = os.path.join("./", opath)
-    if not os.path.exists(path):
-        os.mkdir(path)
-    startEndPath = str(numClustersStart) + "-" + str(numClustersEnd)
-    visualizer.show(outpath="./" + opath + "/" + str(n_clusters) + ".png")  # TODO
-    plt.cla()
-    plt.clf()
-    plt.close("all")
-    print(
-        "For n_clusters =",
-        n_clusters,
-        "The average silhouette_score is :",
-        silhouette_avg,
-    )
-    print("For n_clusters =", n_clusters, "The distortion is :", km.inertia_)
-    dictionary = {}
-    print(n_clusters, "clusters:")
-    for i in range(n_clusters):
-        dictionary[i] = []
-    for i in range(len(cluster_labels)):
-        dictionary[cluster_labels[i]].append(dataOrg.loc[i, "_id"])
-    print(dictionary)
-    print("------------------------------\n")
-
-
-plt.cla()
-plt.clf()
-plt.close("all")
-plt.plot(range(numClustersStart, numClustersEnd, step), distortions, marker="o")
-plt.xlabel("Number of clusters")
-plt.ylabel("Distortion")
-# plt.show()
-plt.savefig("./" + opath + "/" + startEndPath + "-distortion")
-plt.close("all")
