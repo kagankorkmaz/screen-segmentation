@@ -34,12 +34,15 @@ dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
 # print(data)
-# data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
-# data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
+data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
+data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
+
+
 # data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
 # data["area"] = data.apply(lambda row: (row.x2-row.x1)
 #                          * (row.y2 - row.y1), axis=1)
 # data = data.drop(columns=["x1", "y1", "x2", "y2"])
+
 
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
@@ -62,13 +65,43 @@ data["center"] = data.apply(
     lambda row: [row.x1 + row.width / 2, row.y1 + row.height / 2], axis=1
 )
 
-data = data.drop(columns=['x1', 'x2', 'y1', 'y2', 'inside', 'width', 'height'])
+data = data.drop(columns=['width', 'height'])
 
 data2 = data.copy()
 data["key"] = 1
 data2["key"] = 1
+
 result = pd.merge(data, data2, on="key").drop("key", 1)
 result = result[result["_id_x"] < result["_id_y"]]
+
+result["center_angle"] = result.apply(
+    lambda row: np.rad2deg(np.arctan2((row.y_x - row.y_y), (row.x1_x - row.x1_y))),
+    axis=1,
+)
+
+result["same_row"] = result.apply(
+    lambda row: "1"
+    if abs(row.center_angle) > 177 and abs(row.center_angle) < 183
+    else "0",
+    axis=1,
+)
+result["same_column"] = result.apply(
+    lambda row: "1"
+    if abs(row.center_angle) > 86 and abs(row.center_angle) < 94
+    else "0",
+    axis=1,
+)
+
+only_id = result.drop(columns=[ 'leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
+       'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
+       'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x', 
+       'leftUpCorner_y', 'rightUpCorner_y', 'leftBottomCorner_y',
+       'rightBottomCorner_y', 'topEdgeCenter_y', 'BottomEdgeCenter_y',
+       'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y',
+       'x_x','x_y','y_x','y_y','center_angle','inside_x','inside_y',
+       'x1_x', 'x2_x', 'y1_x', 'y2_x',
+       'x1_y', 'x2_y', 'y1_y', 'y2_y' ])
+
 
 for a in range(9):
     first=""
@@ -115,10 +148,6 @@ for a in range(9):
         else:
             second = 'center_y'    
         
-        # result[column_name] = result.apply(
-        #     lambda row: math.sqrt(pow((row.loc(first)[0] - row.loc(second)[0]), 2) + pow((row.loc(first)[1] - row.loc(second)[1]), 2)),
-        #     axis=1,
-        # )
         ls = []
         ls_angle = []
         for c in range(len(result.index)):
@@ -132,8 +161,36 @@ for a in range(9):
         result[angle_name] = MinMaxScaler().fit_transform(
             np.array(result[angle_name]).reshape(-1, 1)
             )
-# print(result['leftUpCorner_x'].iloc[0][1])    
+
+result = result.drop(columns=['_id_x','_id_y','leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
+       'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
+       'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x','leftUpCorner_y', 'rightUpCorner_y', 'leftBottomCorner_y',
+       'rightBottomCorner_y', 'topEdgeCenter_y', 'BottomEdgeCenter_y',
+       'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y','x_x','x_y','y_x','y_y',
+       'center_angle','x1_x', 'x2_x', 'y1_x', 'y2_x',
+       'x1_y', 'x2_y', 'y1_y', 'y2_y'])
 print(result)
+
+
+clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
+print(clustering.labels_)
+
+only_id["labels"] = clustering.labels_
+clusters = [None] * len(set(clustering.labels_))
+for x in range(len(set(clustering.labels_))):
+    clusters[x] = []
+
+
+for i in range(len(only_id)):
+    clusters[only_id["labels"].values[i]].append(
+        [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
+    )
+
+for i in range(len(clusters)):
+    print(i)
+    pprint(clusters[i])
+    print("--------------------------------")
+
 quit()
 
 
