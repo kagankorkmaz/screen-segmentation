@@ -40,7 +40,7 @@ data = dataOrg.copy()
 # data["area"] = data.apply(lambda row: (row.x2-row.x1)
 #                          * (row.y2 - row.y1), axis=1)
 # data = data.drop(columns=["x1", "y1", "x2", "y2"])
-data2 = data
+
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
 data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
@@ -61,8 +61,79 @@ data["rightEdgeCenter"] = data.apply(
 data["center"] = data.apply(
     lambda row: [row.x1 + row.width / 2, row.y1 + row.height / 2], axis=1
 )
-print(data)
 
+data = data.drop(columns=['x1', 'x2', 'y1', 'y2', 'inside', 'width', 'height'])
+
+data2 = data.copy()
+data["key"] = 1
+data2["key"] = 1
+result = pd.merge(data, data2, on="key").drop("key", 1)
+result = result[result["_id_x"] < result["_id_y"]]
+
+for a in range(9):
+    first=""
+    if a==0:
+        first = 'leftUpCorner_x'
+    elif a==1:
+        first = 'rightUpCorner_x'
+    elif a==2:
+        first = 'leftBottomCorner_x'
+    elif a==3:
+        first = 'rightBottomCorner_x'
+    elif a==4:
+        first = 'topEdgeCenter_x'
+    elif a==5:
+        first = 'BottomEdgeCenter_x'
+    elif a==6:
+        first = 'leftEdgeCenter_x'
+    elif a==7:
+        first = 'rightEdgeCenter_x'
+    else:
+        first = 'center_x' 
+    for b in range(9):
+        column_index = a*9+b
+        column_name = "diff_"+str(column_index)
+        angle_name = "angle_"+str(column_index)
+        
+        second=""
+        if b == 0:
+            second = 'leftUpCorner_y'
+        elif b==1:
+            second = 'rightUpCorner_y'
+        elif b==2:
+            second = 'leftBottomCorner_y'
+        elif b==3:
+            second = 'rightBottomCorner_y'
+        elif b==4:
+            second = 'topEdgeCenter_y'
+        elif b==5:
+            second = 'BottomEdgeCenter_y'
+        elif b==6:
+            second = 'leftEdgeCenter_y'
+        elif b==7:
+            second = 'rightEdgeCenter_y'
+        else:
+            second = 'center_y'    
+        
+        # result[column_name] = result.apply(
+        #     lambda row: math.sqrt(pow((row.loc(first)[0] - row.loc(second)[0]), 2) + pow((row.loc(first)[1] - row.loc(second)[1]), 2)),
+        #     axis=1,
+        # )
+        ls = []
+        ls_angle = []
+        for c in range(len(result.index)):
+            ls.append(math.sqrt(pow((result[first].iloc[c][0] - result[second].iloc[c][0]), 2) + pow((result[first].iloc[c][1] - result[second].iloc[c][1]), 2)))
+            ls_angle.append(np.rad2deg(np.arctan2((result[first].iloc[c][1] - result[second].iloc[c][1]), (result[first].iloc[c][0] - result[second].iloc[c][0]))))
+        result[column_name]=ls
+        result[angle_name]= ls_angle
+        result[column_name] = MinMaxScaler().fit_transform(
+            np.array(result[column_name]).reshape(-1, 1)
+            )
+        result[angle_name] = MinMaxScaler().fit_transform(
+            np.array(result[angle_name]).reshape(-1, 1)
+            )
+# print(result['leftUpCorner_x'].iloc[0][1])    
+print(result)
 quit()
 
 
