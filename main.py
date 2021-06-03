@@ -35,12 +35,36 @@ dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
 # print(data)
 # data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
-data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
+# data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
 # data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
 # data["area"] = data.apply(lambda row: (row.x2-row.x1)
 #                          * (row.y2 - row.y1), axis=1)
 # data = data.drop(columns=["x1", "y1", "x2", "y2"])
 data2 = data
+
+data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
+data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
+data["leftBottomCorner"] = data.apply(lambda row: [row.x1, row.y1 + row.height], axis=1)
+data["rightBottomCorner"] = data.apply(
+    lambda row: [row.x1 + row.width, row.y1 + row.height], axis=1
+)
+data["topEdgeCenter"] = data.apply(lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
+data["BottomEdgeCenter"] = data.apply(
+    lambda row: [row.x1 + row.width / 2, row.y1 + row.height], axis=1
+)
+data["leftEdgeCenter"] = data.apply(
+    lambda row: [row.x1, row.y1 + row.height / 2], axis=1
+)
+data["rightEdgeCenter"] = data.apply(
+    lambda row: [row.x1 + row.width, row.y1 + row.height / 2], axis=1
+)
+data["center"] = data.apply(
+    lambda row: [row.x1 + row.width / 2, row.y1 + row.height / 2], axis=1
+)
+print(data)
+
+quit()
+
 
 data["key"] = 1
 data2["key"] = 1
@@ -131,7 +155,9 @@ for x in range(len(set(clustering.labels_))):
 
 
 for i in range(len(only_id)):
-    clusters[only_id["labels"].values[i]].append([only_id["_id_x"].values[i], only_id["_id_y"].values[i]])
+    clusters[only_id["labels"].values[i]].append(
+        [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
+    )
 
 # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
 #     print(only_id)
