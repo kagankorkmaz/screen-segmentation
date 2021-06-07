@@ -150,11 +150,11 @@ result = result.drop(columns=['_id_x', '_id_y', 'leftUpCorner_x', 'rightUpCorner
                               'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y', 'x_x', 'x_y', 'y_x', 'y_y',
                               'center_angle', 'x1_x', 'x2_x', 'y1_x', 'y2_x',
                               'x1_y', 'x2_y', 'y1_y', 'y2_y'])
-print(result)
+#print(result)
 
 
 clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
-print(clustering.labels_)
+#print(clustering.labels_)
 
 only_id["labels"] = clustering.labels_
 clusters = [None] * len(set(clustering.labels_))
@@ -205,7 +205,7 @@ for boxId in scoringDict:
     scoringDict[boxId] = sortedArr
 
 
-pprint(scoringDict)
+#pprint(scoringDict)
 
 
 # /SCORING
@@ -236,9 +236,9 @@ for clst in cluster_ids:
     maxleftdowny = 0
     maxrightdownx = 0
     maxrightdowny = 0
+    if clst == []:
+        continue
     for a in clst:
-        if a == []:
-            continue
         a = a-1
         if corners['leftUpCorner'].iloc[a][0] <= maxleftupx:
             maxleftupx = corners['leftUpCorner'].iloc[a][0]
@@ -270,112 +270,73 @@ for clst in cluster_ids:
     coord.append(coordrightdown)
     cluster_coords.append(coord)
 
-print(cluster_coords)  # cluster bounding boxes coordinates
-quit()
+def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
+     
+    # To check if either rectangle is actually a line
+      # For example  :  l1 ={-1,0}  r1={1,1}  l2={0,-1}  r2={0,1}
+       
+    if (l1x == r1x or l1y == r2y or l2x == r2x or l2y == r2y):
+        # the line cannot have positive overlap
+        return False
+       
+     
+    # If one rectangle is on left side of other
+    if(l1x >= r2x or l2x >= r1x):
+        return False
+ 
+    # If one rectangle is above other
+    if(l1y >= r2y or l2y >= r1y):
+        return False
+ 
+    return True
+def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
+    if (l2x <= l1x and l1x <= r2x) and  (r1x >= l2x and r1x <= r2x) and (l2y <= l1y and l1y <= r2y) and (r1y >= l2y and r1y <= r2y):
+        return True
+    return False
 
+print(len(cluster_ids))
 
-data["key"] = 1
-data2["key"] = 1
-result = pd.merge(data, data2, on="key").drop("key", 1)
-result = result[result["_id_x"] < result["_id_y"]]
+real_clusters = []
+real_cluster_ids = []
+clstid = 0
+notclst = 0
+realcl = 0
+for clst in cluster_ids:
+    if clst == []:
+        continue
+    l2x = cluster_coords[clstid][0][0]
+    l2y = cluster_coords[clstid][0][1]
+    r2x = cluster_coords[clstid][3][0]
+    r2y = cluster_coords[clstid][3][1]
+    isclst = False
+    for a in range(len(corners)):
+        a = a + 1
+        if a in clst:
+            if a == len(corners):
+                isclst = True
+            continue
+        l1x = corners['leftUpCorner'].iloc[a-1][0]
+        l1y = corners['leftUpCorner'].iloc[a-1][1]
+        r1x = corners['rightBottomCorner'].iloc[a-1][0]
+        r1y = corners['rightBottomCorner'].iloc[a-1][1]     
+        if doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y) or isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
+            notclst = notclst + 1 
+            break
+        if a == len(corners):
+            isclst = True
+    if isclst == True:
+        realcl = realcl + 1
+        real_clusters.append(clst)
+        real_cluster_ids.append(clstid)
+    clstid = clstid + 1
+# pprint(real_clusters)
+# print("=====================")
+# print(real_cluster_ids)
 
-result["center_diff"] = result.apply(
-    lambda row: math.sqrt(pow((row.x1_x - row.x1_y), 2) +
-                          pow((row.y_x - row.y_y), 2)),
-    axis=1,
-)
-result["center_angle"] = result.apply(
-    lambda row: np.rad2deg(np.arctan2(
-        (row.y_x - row.y_y), (row.x1_x - row.x1_y))),
-    axis=1,
-)
-result = result.drop(
-    columns=[
-        "x2_x",
-        "y1_x",
-        "y2_x",
-        "width_x",
-        "height_x",
-        "x1_y",
-        "x2_y",
-        "y1_y",
-        "y2_y",
-        "width_y",
-        "height_y",
-    ]
-)
-result["same_row"] = result.apply(
-    lambda row: "1"
-    if abs(row.center_angle) > 177 and abs(row.center_angle) < 183
-    else "0",
-    axis=1,
-)
-result["same_column"] = result.apply(
-    lambda row: "1"
-    if abs(row.center_angle) > 86 and abs(row.center_angle) < 94
-    else "0",
-    axis=1,
-)
-result["ndist"] = MinMaxScaler().fit_transform(
-    np.array(result["center_diff"]).reshape(-1, 1)
-)
-
-##########################################################################
-# y value is the middle point between y1 and y2 values
-# x values is the middle point between x1 and x2 values
-# _x represents first box values and _y represents second box values
-# center_diff, the distance between (x1_x, y_x) and (x1_y, y_y) points.
-# center_angle, the angle between (x1_x, y_x) and (x1_y, y_y) points.
-# inside value is 1 if box contains an icon, 0 if box contains a label
-# same_row is 1 if the absolute value of the angle between the points (x1_x, y_x) and (x1_y, y_y) is between 177 and 183, else same_row is 0
-# same_column is 1 if the absolute value of the angle between the points (x1_x, y_x) and (x1_y, y_y) is between 86 and 94, else same_row is 0
-# ndist is the normalized values of center_diff values, MinMaxScaler() function is used.
-# normalizing the distance between bounding box may increase the clustering performance
-############################################################################
-# result = result.drop(columns=['x1_x', 'inside_x', 'y_x', 'inside_y', 'y_y',
-#        'center_diff', 'center_angle', 'same_row', 'same_column', 'ndist'])
-only_id = result.drop(
-    columns=[
-        "x1_x",
-        "inside_x",
-        "y_x",
-        "inside_y",
-        "y_y",
-        "center_diff",
-        "center_angle",
-        "same_row",
-        "same_column",
-        "ndist",
-    ]
-)
-# with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-#     print(result)
-result = result.drop(
-    columns=["x1_x", "_id_x", "y_x", "_id_y",
-             "y_y", "center_diff", "center_angle"]
-)
-# print(result)
-
-clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
-# print(clustering.labels_)
-
-only_id["labels"] = clustering.labels_
-clusters = [None] * len(set(clustering.labels_))
-for x in range(len(set(clustering.labels_))):
-    clusters[x] = []
-
-
-for i in range(len(only_id)):
-    clusters[only_id["labels"].values[i]].append(
-        [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
-    )
-
-# with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-#     print(only_id)
-
-# for i in range(len(clusters)):
-#     print(i)
-#     pprint(clusters[i])
-#     print("--------------------------------")
+# for clst in cluster_coords:
+#     print(clst)
+    
+#print(cluster_coords)  # cluster bounding boxes coordinates
 
 quit()
+
