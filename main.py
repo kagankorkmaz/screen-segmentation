@@ -294,7 +294,7 @@ def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
         return True
     return False
 
-print(len(cluster_ids))
+#print(len(cluster_ids))
 
 real_clusters = []
 real_cluster_ids = []
@@ -329,6 +329,24 @@ for clst in cluster_ids:
         real_clusters.append(clst)
         real_cluster_ids.append(clstid)
     clstid = clstid + 1
+
+for clst in real_clusters:
+    clst.sort()
+    #print(clst)
+b_set = set(tuple(x) for x in real_clusters)
+clusters_1 = [ list(x) for x in b_set ]
+final_clusters = []
+new_list = []
+for clst in clusters_1:
+    if len(clst) != len(corners):
+        new_list.append(clst)
+print(new_list)
+# clst ayni rowda ise tum elemanlari, add to final cluster
+# clst in kendisi disinda eleman sayisi ayni ise, o clst ile joinle; use center angle, ayni rowda olan ikilileri bir clst a at; add to final
+# bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at. 
+# final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
+    
+
 # pprint(real_clusters)
 # print("=====================")
 # print(real_cluster_ids)
