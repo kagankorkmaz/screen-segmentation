@@ -359,6 +359,7 @@ print(sameRow.loc[sameRow['_id_x'] == 3 and sameRow['_id_y'] == 4])
 def isSameRow(a,b): 
     print('lol')
 # clst ayni rowda ise tum elemanlari, add to final cluster
+
 for clst in new_list:
     sameRow = True
     for i in range(len(clst)):
@@ -372,9 +373,54 @@ for clst in new_list:
             break
     if sameRow == True:
         final_clusters.append(clst)
+        
+        
             
 # clst in kendisi disinda eleman sayisi ayni ise, o clst ile joinle; use center angle, ayni rowda olan ikilileri bir clst a at; add to final
+
+for a in range(len(new_list)):
+    huri = []
+    sameLength = False
+    for b in range(a + 1, len(new_list)):
+        if len(new_list[a]) == len(new_list[b]):
+            sameLength = True
+        else:
+            continue
+    if sameLength == True:
+        clsta = new_list[a]
+        clstb = new_list[b]
+        for i in clsta:
+            for j in clstb:
+                if(isSameRow(i,j)):
+                    huri.append(i)
+                    huri.append(j)
+    final_clusters.append(huri)
+
 # bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at. 
+
+item = []
+huri2 = []
+for i in range(len(corners)):
+    item.append(i+1)
+unknown = []
+for ct in new_list:
+    for i in ct:
+        huri2.append(i)
+
+huri2 = set(huri2)
+
+for element in item:
+    if element not in huri2:
+        unknown.append(element)
+
+for i in range(len(unknown)):
+    for j in range(i+1,len(unknown)):
+        new_cluster = []
+        if(isSameRow(i,j)):
+            new_cluster.append(i)
+            new_cluster.append(j)
+        final_clusters.append(new_cluster)
+
 # final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
     
 
