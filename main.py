@@ -45,20 +45,18 @@ data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
 
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
-data["rightUpCorner"] = data.apply(
-    lambda row: [row.x1 + row.width, row.y1], axis=1)
-data["leftBottomCorner"] = data.apply(
-    lambda row: [row.x1, row.y1 + row.height], axis=1)
+data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
+data["leftBottomCorner"] = data.apply(lambda row: [row.x1, row.y1 + row.height], axis=1)
 data["rightBottomCorner"] = data.apply(
     lambda row: [row.x1 + row.width, row.y1 + row.height], axis=1
 )
 corners = data.copy()
 corners = corners.drop(
-    columns=['x1', 'x2', 'y1', 'y2', 'inside', 'width', 'height', '_id', 'x', 'y'])
+    columns=["x1", "x2", "y1", "y2", "inside", "width", "height", "_id", "x", "y"]
+)
 
 
-data["topEdgeCenter"] = data.apply(
-    lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
+data["topEdgeCenter"] = data.apply(lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
 data["BottomEdgeCenter"] = data.apply(
     lambda row: [row.x1 + row.width / 2, row.y1 + row.height], axis=1
 )
@@ -72,7 +70,7 @@ data["center"] = data.apply(
     lambda row: [row.x1 + row.width / 2, row.y1 + row.height / 2], axis=1
 )
 
-data = data.drop(columns=['width', 'height'])
+data = data.drop(columns=["width", "height"])
 
 data2 = data.copy()
 data["key"] = 1
@@ -82,8 +80,7 @@ result = pd.merge(data, data2, on="key").drop("key", 1)
 result = result[result["_id_x"] < result["_id_y"]]
 
 result["center_angle"] = result.apply(
-    lambda row: np.rad2deg(np.arctan2(
-        (row.y_x - row.y_y), (row.x1_x - row.x1_y))),
+    lambda row: np.rad2deg(np.arctan2((row.y_x - row.y_y), (row.x1_x - row.x1_y))),
     axis=1,
 )
 
@@ -99,52 +96,137 @@ result["same_column"] = result.apply(
     else "0",
     axis=1,
 )
-sameRow = result.copy()
+sameRowColumn = result.copy()
 
-sameRow = sameRow.drop(columns = ['x1_x', 'x2_x', 'y1_x', 'y2_x', 'inside_x', 'x_x', 'y_x',
-       'leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
-       'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
-       'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x', 'x1_y', 'x2_y',
-       'y1_y', 'y2_y', 'inside_y', 'x_y', 'y_y', 'leftUpCorner_y',
-       'rightUpCorner_y', 'leftBottomCorner_y', 'rightBottomCorner_y',
-       'topEdgeCenter_y', 'BottomEdgeCenter_y', 'leftEdgeCenter_y',
-       'rightEdgeCenter_y', 'center_y', 'center_angle'])
+sameRowColumn = sameRowColumn.drop(
+    columns=[
+        "x1_x",
+        "x2_x",
+        "y1_x",
+        "y2_x",
+        "inside_x",
+        "x_x",
+        "y_x",
+        "leftUpCorner_x",
+        "rightUpCorner_x",
+        "leftBottomCorner_x",
+        "rightBottomCorner_x",
+        "topEdgeCenter_x",
+        "BottomEdgeCenter_x",
+        "leftEdgeCenter_x",
+        "rightEdgeCenter_x",
+        "center_x",
+        "x1_y",
+        "x2_y",
+        "y1_y",
+        "y2_y",
+        "inside_y",
+        "x_y",
+        "y_y",
+        "leftUpCorner_y",
+        "rightUpCorner_y",
+        "leftBottomCorner_y",
+        "rightBottomCorner_y",
+        "topEdgeCenter_y",
+        "BottomEdgeCenter_y",
+        "leftEdgeCenter_y",
+        "rightEdgeCenter_y",
+        "center_y",
+        "center_angle",
+    ]
+)
 
 
-only_id = result.drop(columns=['leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
-                               'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
-                               'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x',
-                               'leftUpCorner_y', 'rightUpCorner_y', 'leftBottomCorner_y',
-                               'rightBottomCorner_y', 'topEdgeCenter_y', 'BottomEdgeCenter_y',
-                               'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y',
-                               'x_x', 'x_y', 'y_x', 'y_y', 'center_angle', 'inside_x', 'inside_y',
-                               'x1_x', 'x2_x', 'y1_x', 'y2_x',
-                               'x1_y', 'x2_y', 'y1_y', 'y2_y'])
+only_id = result.drop(
+    columns=[
+        "leftUpCorner_x",
+        "rightUpCorner_x",
+        "leftBottomCorner_x",
+        "rightBottomCorner_x",
+        "topEdgeCenter_x",
+        "BottomEdgeCenter_x",
+        "leftEdgeCenter_x",
+        "rightEdgeCenter_x",
+        "center_x",
+        "leftUpCorner_y",
+        "rightUpCorner_y",
+        "leftBottomCorner_y",
+        "rightBottomCorner_y",
+        "topEdgeCenter_y",
+        "BottomEdgeCenter_y",
+        "leftEdgeCenter_y",
+        "rightEdgeCenter_y",
+        "center_y",
+        "x_x",
+        "x_y",
+        "y_x",
+        "y_y",
+        "center_angle",
+        "inside_x",
+        "inside_y",
+        "x1_x",
+        "x2_x",
+        "y1_x",
+        "y2_x",
+        "x1_y",
+        "x2_y",
+        "y1_y",
+        "y2_y",
+    ]
+)
 
 
 for a in range(9):
     first = ""
-    first_lst = ['leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x', 'rightBottomCorner_x',
-                 'topEdgeCenter_x', 'BottomEdgeCenter_x', 'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x']
+    first_lst = [
+        "leftUpCorner_x",
+        "rightUpCorner_x",
+        "leftBottomCorner_x",
+        "rightBottomCorner_x",
+        "topEdgeCenter_x",
+        "BottomEdgeCenter_x",
+        "leftEdgeCenter_x",
+        "rightEdgeCenter_x",
+        "center_x",
+    ]
     first = first_lst[a]
 
     for b in range(9):
-        column_index = a*9+b
-        column_name = "diff_"+str(column_index)
-        angle_name = "angle_"+str(column_index)
+        column_index = a * 9 + b
+        column_name = "diff_" + str(column_index)
+        angle_name = "angle_" + str(column_index)
 
         second = ""
-        second_lst = ['leftUpCorner_y', 'rightUpCorner_y', 'leftBottomCorner_y', 'rightBottomCorner_y',
-                      'topEdgeCenter_y', 'BottomEdgeCenter_y', 'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y']
+        second_lst = [
+            "leftUpCorner_y",
+            "rightUpCorner_y",
+            "leftBottomCorner_y",
+            "rightBottomCorner_y",
+            "topEdgeCenter_y",
+            "BottomEdgeCenter_y",
+            "leftEdgeCenter_y",
+            "rightEdgeCenter_y",
+            "center_y",
+        ]
         second = second_lst[b]
 
         ls = []
         ls_angle = []
         for c in range(len(result.index)):
-            ls.append(math.sqrt(pow((result[first].iloc[c][0] - result[second].iloc[c][0]), 2) + pow(
-                (result[first].iloc[c][1] - result[second].iloc[c][1]), 2)))
-            ls_angle.append(np.rad2deg(np.arctan2(
-                (result[first].iloc[c][1] - result[second].iloc[c][1]), (result[first].iloc[c][0] - result[second].iloc[c][0]))))
+            ls.append(
+                math.sqrt(
+                    pow((result[first].iloc[c][0] - result[second].iloc[c][0]), 2)
+                    + pow((result[first].iloc[c][1] - result[second].iloc[c][1]), 2)
+                )
+            )
+            ls_angle.append(
+                np.rad2deg(
+                    np.arctan2(
+                        (result[first].iloc[c][1] - result[second].iloc[c][1]),
+                        (result[first].iloc[c][0] - result[second].iloc[c][0]),
+                    )
+                )
+            )
         result[column_name] = ls
         result[angle_name] = ls_angle
         result[column_name] = MinMaxScaler().fit_transform(
@@ -154,18 +236,48 @@ for a in range(9):
             np.array(result[angle_name]).reshape(-1, 1)
         )
 
-result = result.drop(columns=['_id_x', '_id_y', 'leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
-                              'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
-                              'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x', 'leftUpCorner_y', 'rightUpCorner_y', 'leftBottomCorner_y',
-                              'rightBottomCorner_y', 'topEdgeCenter_y', 'BottomEdgeCenter_y',
-                              'leftEdgeCenter_y', 'rightEdgeCenter_y', 'center_y', 'x_x', 'x_y', 'y_x', 'y_y',
-                              'center_angle', 'x1_x', 'x2_x', 'y1_x', 'y2_x',
-                              'x1_y', 'x2_y', 'y1_y', 'y2_y'])
-#print(result)
+result = result.drop(
+    columns=[
+        "_id_x",
+        "_id_y",
+        "leftUpCorner_x",
+        "rightUpCorner_x",
+        "leftBottomCorner_x",
+        "rightBottomCorner_x",
+        "topEdgeCenter_x",
+        "BottomEdgeCenter_x",
+        "leftEdgeCenter_x",
+        "rightEdgeCenter_x",
+        "center_x",
+        "leftUpCorner_y",
+        "rightUpCorner_y",
+        "leftBottomCorner_y",
+        "rightBottomCorner_y",
+        "topEdgeCenter_y",
+        "BottomEdgeCenter_y",
+        "leftEdgeCenter_y",
+        "rightEdgeCenter_y",
+        "center_y",
+        "x_x",
+        "x_y",
+        "y_x",
+        "y_y",
+        "center_angle",
+        "x1_x",
+        "x2_x",
+        "y1_x",
+        "y2_x",
+        "x1_y",
+        "x2_y",
+        "y1_y",
+        "y2_y",
+    ]
+)
+# print(result)
 
 
 clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
-#print(clustering.labels_)
+# print(clustering.labels_)
 
 only_id["labels"] = clustering.labels_
 clusters = [None] * len(set(clustering.labels_))
@@ -216,7 +328,7 @@ for boxId in scoringDict:
     scoringDict[boxId] = sortedArr
 
 
-#pprint(scoringDict)
+# pprint(scoringDict)
 
 
 # /SCORING
@@ -250,23 +362,23 @@ for clst in cluster_ids:
     if clst == []:
         continue
     for a in clst:
-        a = a-1
-        if corners['leftUpCorner'].iloc[a][0] <= maxleftupx:
-            maxleftupx = corners['leftUpCorner'].iloc[a][0]
-        if corners['leftUpCorner'].iloc[a][1] <= maxleftupy:
-            maxleftupy = corners['leftUpCorner'].iloc[a][1]
-        if corners['rightUpCorner'].iloc[a][0] >= maxrightupx:
-            maxrightupx = corners['rightUpCorner'].iloc[a][0]
-        if corners['rightUpCorner'].iloc[a][1] <= maxrightupy:
-            maxrightupy = corners['rightUpCorner'].iloc[a][1]
-        if corners['leftBottomCorner'].iloc[a][0] <= maxleftdownx:
-            maxleftdownx = corners['leftBottomCorner'].iloc[a][0]
-        if corners['leftBottomCorner'].iloc[a][1] >= maxleftdowny:
-            maxleftdowny = corners['leftBottomCorner'].iloc[a][1]
-        if corners['rightBottomCorner'].iloc[a][0] >= maxrightdownx:
-            maxrightdownx = corners['rightBottomCorner'].iloc[a][0]
-        if corners['rightBottomCorner'].iloc[a][1] >= maxrightdowny:
-            maxrightdowny = corners['rightBottomCorner'].iloc[a][1]
+        a = a - 1
+        if corners["leftUpCorner"].iloc[a][0] <= maxleftupx:
+            maxleftupx = corners["leftUpCorner"].iloc[a][0]
+        if corners["leftUpCorner"].iloc[a][1] <= maxleftupy:
+            maxleftupy = corners["leftUpCorner"].iloc[a][1]
+        if corners["rightUpCorner"].iloc[a][0] >= maxrightupx:
+            maxrightupx = corners["rightUpCorner"].iloc[a][0]
+        if corners["rightUpCorner"].iloc[a][1] <= maxrightupy:
+            maxrightupy = corners["rightUpCorner"].iloc[a][1]
+        if corners["leftBottomCorner"].iloc[a][0] <= maxleftdownx:
+            maxleftdownx = corners["leftBottomCorner"].iloc[a][0]
+        if corners["leftBottomCorner"].iloc[a][1] >= maxleftdowny:
+            maxleftdowny = corners["leftBottomCorner"].iloc[a][1]
+        if corners["rightBottomCorner"].iloc[a][0] >= maxrightdownx:
+            maxrightdownx = corners["rightBottomCorner"].iloc[a][0]
+        if corners["rightBottomCorner"].iloc[a][1] >= maxrightdowny:
+            maxrightdowny = corners["rightBottomCorner"].iloc[a][1]
     coordleftup.append(maxleftupx)
     coordleftup.append(maxleftupy)
     coordrightup.append(maxrightupx)
@@ -281,31 +393,39 @@ for clst in cluster_ids:
     coord.append(coordrightdown)
     cluster_coords.append(coord)
 
+
 def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
-     
+
     # To check if either rectangle is actually a line
-      # For example  :  l1 ={-1,0}  r1={1,1}  l2={0,-1}  r2={0,1}
-       
-    if (l1x == r1x or l1y == r2y or l2x == r2x or l2y == r2y):
+    # For example  :  l1 ={-1,0}  r1={1,1}  l2={0,-1}  r2={0,1}
+
+    if l1x == r1x or l1y == r2y or l2x == r2x or l2y == r2y:
         # the line cannot have positive overlap
         return False
-       
-     
+
     # If one rectangle is on left side of other
-    if(l1x >= r2x or l2x >= r1x):
+    if l1x >= r2x or l2x >= r1x:
         return False
- 
+
     # If one rectangle is above other
-    if(l1y >= r2y or l2y >= r1y):
+    if l1y >= r2y or l2y >= r1y:
         return False
- 
+
     return True
+
+
 def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
-    if (l2x <= l1x and l1x <= r2x) and  (r1x >= l2x and r1x <= r2x) and (l2y <= l1y and l1y <= r2y) and (r1y >= l2y and r1y <= r2y):
+    if (
+        (l2x <= l1x and l1x <= r2x)
+        and (r1x >= l2x and r1x <= r2x)
+        and (l2y <= l1y and l1y <= r2y)
+        and (r1y >= l2y and r1y <= r2y)
+    ):
         return True
     return False
 
-#print(len(cluster_ids))
+
+# print(len(cluster_ids))
 
 real_clusters = []
 real_cluster_ids = []
@@ -326,12 +446,14 @@ for clst in cluster_ids:
             if a == len(corners):
                 isclst = True
             continue
-        l1x = corners['leftUpCorner'].iloc[a-1][0]
-        l1y = corners['leftUpCorner'].iloc[a-1][1]
-        r1x = corners['rightBottomCorner'].iloc[a-1][0]
-        r1y = corners['rightBottomCorner'].iloc[a-1][1]     
-        if doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y) or isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
-            notclst = notclst + 1 
+        l1x = corners["leftUpCorner"].iloc[a - 1][0]
+        l1y = corners["leftUpCorner"].iloc[a - 1][1]
+        r1x = corners["rightBottomCorner"].iloc[a - 1][0]
+        r1y = corners["rightBottomCorner"].iloc[a - 1][1]
+        if doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y) or isInside(
+            l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y
+        ):
+            notclst = notclst + 1
             break
         if a == len(corners):
             isclst = True
@@ -343,39 +465,60 @@ for clst in cluster_ids:
 
 for clst in real_clusters:
     clst.sort()
-    #print(clst)
+    # print(clst)
 b_set = set(tuple(x) for x in real_clusters)
-clusters_1 = [ list(x) for x in b_set ]
+clusters_1 = [list(x) for x in b_set]
 final_clusters = []
 new_list = []
 for clst in clusters_1:
     if len(clst) != len(corners):
         new_list.append(clst)
 print(new_list)
-print(sameRow.loc[sameRow['_id_x'] == 3 and sameRow['_id_y'] == 4])
 
 # gets 2 object ids (_id_x and _id_y). check from sameRow['same_row'] value
 # if the value is 1 return true else return false
-def isSameRow(a,b): 
-    print('lol')
-# clst ayni rowda ise tum elemanlari, add to final cluster
+def isSameRow(a, b):
+    print("------------------")
+    print(a,b)
+    if (a < b):
+        x = sameRowColumn.loc[sameRowColumn["_id_x"] == a]
+        x = x.loc[x["_id_y"] == b]
+        # print(x["same_row"].values[0])
+        if x["same_row"].values[0] == "1":
+            return True
+        else:
+            return False
+    else:
+        x = sameRowColumn.loc[sameRowColumn["_id_x"] == b]
+        x = x.loc[x["_id_y"] == a]
+        # print(x["same_row"].values[0])
+        if x["same_row"].values[0] == "1":
+            return True
+        else:
+            return False
 
+
+# clst ayni rowda ise tum elemanlari, add to final cluster
+print(new_list)
+new_list_index = 0
 for clst in new_list:
     sameRow = True
     for i in range(len(clst)):
         for j in range(i + 1, len(clst)):
-            if(isSameRow(clst[i], clst[j])):
+            if isSameRow(clst[i], clst[j]):
                 continue
             else:
                 sameRow = False
                 break
         if sameRow == False:
             break
+    new_list_index += 1
     if sameRow == True:
         final_clusters.append(clst)
-        
-        
-            
+    if (new_list_index == len(new_list)):
+        break
+print(final_clusters)
+quit()
 # clst in kendisi disinda eleman sayisi ayni ise, o clst ile joinle; use center angle, ayni rowda olan ikilileri bir clst a at; add to final
 
 for a in range(len(new_list)):
@@ -391,17 +534,17 @@ for a in range(len(new_list)):
         clstb = new_list[b]
         for i in clsta:
             for j in clstb:
-                if(isSameRow(i,j)):
+                if isSameRow(i, j):
                     huri.append(i)
                     huri.append(j)
     final_clusters.append(huri)
 
-# bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at. 
+# bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at.
 
 item = []
 huri2 = []
 for i in range(len(corners)):
-    item.append(i+1)
+    item.append(i + 1)
 unknown = []
 for ct in new_list:
     for i in ct:
@@ -414,24 +557,24 @@ for element in item:
         unknown.append(element)
 
 for i in range(len(unknown)):
-    for j in range(i+1,len(unknown)):
+    for j in range(i + 1, len(unknown)):
         new_cluster = []
-        if(isSameRow(i,j)):
+        if isSameRow(i, j):
             new_cluster.append(i)
             new_cluster.append(j)
         final_clusters.append(new_cluster)
 
-# final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
-    
 
+# final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
+
+print(final_clusters)
 # pprint(real_clusters)
 # print("=====================")
 # print(real_cluster_ids)
 
 # for clst in cluster_coords:
 #     print(clst)
-    
-#print(cluster_coords)  # cluster bounding boxes coordinates
+
+# print(cluster_coords)  # cluster bounding boxes coordinates
 
 quit()
-
