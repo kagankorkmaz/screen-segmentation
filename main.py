@@ -99,6 +99,17 @@ result["same_column"] = result.apply(
     else "0",
     axis=1,
 )
+sameRow = result.copy()
+
+sameRow = sameRow.drop(columns = ['x1_x', 'x2_x', 'y1_x', 'y2_x', 'inside_x', 'x_x', 'y_x',
+       'leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
+       'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
+       'leftEdgeCenter_x', 'rightEdgeCenter_x', 'center_x', 'x1_y', 'x2_y',
+       'y1_y', 'y2_y', 'inside_y', 'x_y', 'y_y', 'leftUpCorner_y',
+       'rightUpCorner_y', 'leftBottomCorner_y', 'rightBottomCorner_y',
+       'topEdgeCenter_y', 'BottomEdgeCenter_y', 'leftEdgeCenter_y',
+       'rightEdgeCenter_y', 'center_y', 'center_angle'])
+
 
 only_id = result.drop(columns=['leftUpCorner_x', 'rightUpCorner_x', 'leftBottomCorner_x',
                                'rightBottomCorner_x', 'topEdgeCenter_x', 'BottomEdgeCenter_x',
@@ -341,7 +352,27 @@ for clst in clusters_1:
     if len(clst) != len(corners):
         new_list.append(clst)
 print(new_list)
+print(sameRow.loc[sameRow['_id_x'] == 3 and sameRow['_id_y'] == 4])
+
+# gets 2 object ids (_id_x and _id_y). check from sameRow['same_row'] value
+# if the value is 1 return true else return false
+def isSameRow(a,b): 
+    print('lol')
 # clst ayni rowda ise tum elemanlari, add to final cluster
+for clst in new_list:
+    sameRow = True
+    for i in range(len(clst)):
+        for j in range(i + 1, len(clst)):
+            if(isSameRow(clst[i], clst[j])):
+                continue
+            else:
+                sameRow = False
+                break
+        if sameRow == False:
+            break
+    if sameRow == True:
+        final_clusters.append(clst)
+            
 # clst in kendisi disinda eleman sayisi ayni ise, o clst ile joinle; use center angle, ayni rowda olan ikilileri bir clst a at; add to final
 # bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at. 
 # final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
