@@ -17,32 +17,12 @@ from yellowbrick.cluster import SilhouetteVisualizer
 import os
 from collections import Counter, defaultdict, OrderedDict
 
-# A’nın alanı done
-# A’nın genişlik/uzunluk oranı done
-# A’nın tipi (örn. ikon ya da metin) done
-# B’nin alanı done
-# B’nin genişlik/uzunluk oranı done
-# B’nin tipi (örn. ikon ya da metin) done
-# A ile B’nin merkezleri arasındaki çizginin boyu done
-# A ile B’nin merkezleri arasındaki çizginin açısı done
-
-# ayni columnda olanlar absolute(86-94)
-# ayni row olanlar abs(177 - 183)
-
-
 dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
-# print(data)
+
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
-data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)  # (x1,y)
-
-
-# data["w/h"] = data.apply(lambda row: row.width / row.height, axis=1)
-# data["area"] = data.apply(lambda row: (row.x2-row.x1)
-#                          * (row.y2 - row.y1), axis=1)
-# data = data.drop(columns=["x1", "y1", "x2", "y2"])
-
+data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1) 
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
 data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
@@ -54,7 +34,6 @@ corners = data.copy()
 corners = corners.drop(
     columns=["x1", "x2", "y1", "y2", "inside", "width", "height", "_id", "x", "y"]
 )
-
 
 data["topEdgeCenter"] = data.apply(lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
 data["BottomEdgeCenter"] = data.apply(
@@ -273,28 +252,18 @@ result = result.drop(
         "y2_y",
     ]
 )
-# print(result)
-
 
 clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
-# print(clustering.labels_)
 
 only_id["labels"] = clustering.labels_
 clusters = [None] * len(set(clustering.labels_))
 for x in range(len(set(clustering.labels_))):
     clusters[x] = []
 
-
 for i in range(len(only_id)):
     clusters[only_id["labels"].values[i]].append(
         [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
     )
-
-# PRINT CLUSTERS
-# for i in range(len(clusters)):
-#     print(i)
-#     pprint(clusters[i])
-#     print("--------------------------------")
 
 # SCORING
 
@@ -304,7 +273,6 @@ for i in range(len(dataOrg)):
     scoringDict[i + 1] = {}
     for j in range(len(clusters)):
         scoringDict[i + 1][j] = 0
-
 
 # i = clusterNum, tpl = [box_a, box_b]
 for i in range(len(clusters)):
@@ -327,12 +295,9 @@ for boxId in scoringDict:
     )
     scoringDict[boxId] = sortedArr
 
-
 # pprint(scoringDict)
 
-
 # /SCORING
-
 
 cluster_ids = []
 for i in range(len(clusters)):
@@ -344,7 +309,8 @@ for i in range(len(clusters)):
             idlst.append(tup[1])
     cluster_ids.append(idlst)
 
-cluster_coords = []
+##################### Get bounding boxes for clusters
+cluster_coords = [] # list of lists, for each cluster inner lists have [leftUpCorner, rightUpCorner, leftBottomCorner, rightBottomCorner] coordinates in order
 for clst in cluster_ids:
     coord = []
     coordleftup = []
@@ -393,7 +359,7 @@ for clst in cluster_ids:
     coord.append(coordrightdown)
     cluster_coords.append(coord)
 
-
+##################### In order to check whether two bounding box are colliding or not
 def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
 
     # To check if either rectangle is actually a line
@@ -413,7 +379,7 @@ def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
 
     return True
 
-
+################ To check if one bounding box is inside of other
 def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
     if (
         (l2x <= l1x and l1x <= r2x)
@@ -425,13 +391,11 @@ def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
     return False
 
 
-# print(len(cluster_ids))
-
+############## Below we look at the clusters and their bounding boxes, if there is an object which is not an element of the cluster,
+############## but inside/overlapping the bounding box of the cluster, we eliminate that cluster
 real_clusters = []
 real_cluster_ids = []
 clstid = 0
-notclst = 0
-realcl = 0
 for clst in cluster_ids:
     if clst == []:
         continue
@@ -453,37 +417,39 @@ for clst in cluster_ids:
         if doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y) or isInside(
             l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y
         ):
-            notclst = notclst + 1
             break
         if a == len(corners):
             isclst = True
     if isclst == True:
-        realcl = realcl + 1
         real_clusters.append(clst)
         real_cluster_ids.append(clstid)
     clstid = clstid + 1
 
+## real_clusters is the list that we have after the elimination
+
+# We sort the clusters based on the element ids, in an incremental order, in place sort
 for clst in real_clusters:
     clst.sort()
-    # print(clst)
+# After observing duplicate clusters, we eliminate them and make the rest unique
 b_set = set(tuple(x) for x in real_clusters)
 clusters_1 = [list(x) for x in b_set]
+print(clusters_1)
 final_clusters = []
 new_list = []
+# As expected one of the clusters has the all objects, we eliminated that cluster below
 for clst in clusters_1:
     if len(clst) != len(corners):
         new_list.append(clst)
-print(new_list)
 
-# gets 2 object ids (_id_x and _id_y). check from sameRow['same_row'] value
-# if the value is 1 return true else return false
+# new_list is the final list of cluster before heuristics come take the show
+
+
+# Gets 2 object ids (_id_x and _id_y) .it checks sameRow['same_row'] value for a and b ids.
+# If the value is 1 return true else return false
 def isSameRow(a, b):
-    print("------------------")
-    print(a,b)
     if (a < b):
         x = sameRowColumn.loc[sameRowColumn["_id_x"] == a]
         x = x.loc[x["_id_y"] == b]
-        # print(x["same_row"].values[0])
         if x["same_row"].values[0] == "1":
             return True
         else:
@@ -491,15 +457,16 @@ def isSameRow(a, b):
     else:
         x = sameRowColumn.loc[sameRowColumn["_id_x"] == b]
         x = x.loc[x["_id_y"] == a]
-        # print(x["same_row"].values[0])
         if x["same_row"].values[0] == "1":
             return True
         else:
             return False
 
+############ 1ST HEURISTIC
+# Check the clusters. 
+# If all the elements of the cluster are in the samerow
+# Take take cluster as a finalized cluster and add it to final_clusters list
 
-# clst ayni rowda ise tum elemanlari, add to final cluster
-print(new_list)
 new_list_index = 0
 for clst in new_list:
     sameRow = True
@@ -517,9 +484,15 @@ for clst in new_list:
         final_clusters.append(clst)
     if (new_list_index == len(new_list)):
         break
+print("\nAfter the first heuristic we get following finalized clusters: ")
 print(final_clusters)
-quit()
-# clst in kendisi disinda eleman sayisi ayni ise, o clst ile joinle; use center angle, ayni rowda olan ikilileri bir clst a at; add to final
+print("****************************")
+
+############ 2ND HEURISTIC
+# Take each cluster, compare them by their lengths
+# If two clusters have same number of objects: Assumption, two clusters are represents two columns standing next to each other.
+# Compare each elements of these clusters and if two objects are in the same row, add them to another list
+# After filling the list with desired elements, add this list into final_clusters
 
 for a in range(len(new_list)):
     huri = []
@@ -537,44 +510,78 @@ for a in range(len(new_list)):
                 if isSameRow(i, j):
                     huri.append(i)
                     huri.append(j)
+    if huri == []:
+        continue
+    huri.sort()
     final_clusters.append(huri)
 
-# bu clst lar icinde olmayan objelerin id lerini bul, ayni rowda olanlari bir cluster a at.
+print("\nAfter the second heuristic we get the following finalized clusters: ")
+print(final_clusters)
+print("****************************")
+
+############ 3RD HEURISTIC
+# We observed that there are some objects missing in the clusters
+# We assume that if those missing elements are in the same row, they make a new cluster, so we add them to final_clusters
+# If those objects are not in the same row, we assume that they are seperate cluster of their own.
 
 item = []
 huri2 = []
 for i in range(len(corners)):
-    item.append(i + 1)
+    item.append(i + 1) # object ids are starting from 1
 unknown = []
+# we get all the object ids into huri2 list
 for ct in new_list:
     for i in ct:
         huri2.append(i)
-
+# delete the duplicates in huri2
 huri2 = set(huri2)
 
+# we find objects that were not present in the past clusters
 for element in item:
     if element not in huri2:
         unknown.append(element)
-
+# the list "unknown" has those uncaptured objects
 for i in range(len(unknown)):
     for j in range(i + 1, len(unknown)):
         new_cluster = []
-        if isSameRow(i, j):
-            new_cluster.append(i)
-            new_cluster.append(j)
-        final_clusters.append(new_cluster)
+        if isSameRow(unknown[i], unknown[j]):
+            new_cluster.append(unknown[i])
+            new_cluster.append(unknown[j])
+            new_cluster.sort()
+            final_clusters.append(new_cluster)
+        else:
+            final_clusters.append([unknown[i]])
+            final_clusters.append([unknown[j]])      
 
-
-# final clst arrayindeki y degerlerini decremental orderda listele bu sana hiyerarsiyi vercek amk
-
+print("\nAfter the third heuristic we get the following finalized clusters: ")
 print(final_clusters)
-# pprint(real_clusters)
-# print("=====================")
-# print(real_cluster_ids)
+print("****************************")
 
-# for clst in cluster_coords:
-#     print(clst)
+############ 4TH HEURISTIC
+# Now that we seperated every object in a different cluster, we need to find their hierarchical order
+# Clusters' first elements give us the beginning of that region
+# In the UI's like the one in the KODI example, the region in the above is the parent region of the below
+# So we decided to use this knowledge, and sorted them in a decremental order according to clusters' first elements leftUpCorner y coordinate.
+# In our case, from up to down, y coordinate increases (opposite of the general approach), from left to right x is increasing
+# Thats why we assumed that the lowest y value will be the top cluster in the hierarchical order
 
-# print(cluster_coords)  # cluster bounding boxes coordinates
+index = 0
+fclstid = []
+# Here we take the cluster ids and the first element's leftUpCorner's y coordinate in a tuple and give it to fclstid list.
+for clst in final_clusters:
+    clsttup = []
+    clsttup.append(index)
+    clsttup.append(corners["leftUpCorner"].iloc[clst[0]-1][1])
+    index += 1
+    fclstid.append(clsttup)
+# We sort the fclstid array based on the coordinates in an incremental order
+fclstid.sort(key=lambda tup: tup[1])
+
+# Below we printed out the hierarchical order for the final clusters.
+print("\nHierarchical order for the finalized clusters after the 4th heuristic")
+for i in range(len(fclstid)):
+    print("****************************")
+    print(str(i+1) + "th cluster: " + str(final_clusters[fclstid[i][0]]))
+print("****************************")
 
 quit()
