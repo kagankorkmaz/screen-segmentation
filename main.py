@@ -433,7 +433,6 @@ for clst in real_clusters:
 # After observing duplicate clusters, we eliminate them and make the rest unique
 b_set = set(tuple(x) for x in real_clusters)
 clusters_1 = [list(x) for x in b_set]
-print(clusters_1)
 final_clusters = []
 new_list = []
 # As expected one of the clusters has the all objects, we eliminated that cluster below
