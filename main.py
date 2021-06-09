@@ -277,6 +277,7 @@ for i in range(len(only_id)):
     clusters[only_id["labels"].values[i]].append(
         [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
     )
+print("\nNumber of clusters obtained using dbscan clustering algorithm: "+ str(len(clusters)) + "\n")
 ############
 # SCORING
 ## Scoring will be applied to decide which box in which cluster if needed(in the situations if heuristics can not decide for an object in which cluster)
@@ -435,6 +436,7 @@ for clst in cluster_ids:
         real_clusters.append(clst)
         real_cluster_ids.append(clstid)
     clstid = clstid + 1
+print("remaining clusters = " + str(len(real_clusters)))
 
 ## real_clusters is the list that we have after the elimination
 
@@ -471,10 +473,10 @@ def isSameRow(a, b):
             return True
         else:
             return False
-
+print("After eliminating clusters due to their bounding boxes, the cluster size is: " + str(len(new_list)) + "\n")
 ############ 1ST HEURISTIC
 # Check the clusters. 
-# If all the elements of the cluster are in the samerow
+# If all the elements of the cluster are in the same row
 # Take take cluster as a finalized cluster and add it to final_clusters list
 
 new_list_index = 0
@@ -494,7 +496,7 @@ for clst in new_list:
         final_clusters.append(clst)
     if (new_list_index == len(new_list)):
         break
-print("\nAfter the first heuristic we get following finalized clusters: ")
+print("After the first heuristic we get following finalized clusters: ")
 print(final_clusters)
 print("****************************")
 
