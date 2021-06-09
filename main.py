@@ -17,10 +17,13 @@ from yellowbrick.cluster import SilhouetteVisualizer
 import os
 from collections import Counter, defaultdict, OrderedDict
 
+## Reading data
 dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
 
+## Calculating Corners, edges and cetnre values
+############
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
 data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1) 
 
@@ -50,11 +53,13 @@ data["center"] = data.apply(
 )
 
 data = data.drop(columns=["width", "height"])
-
+######################
 data2 = data.copy()
 data["key"] = 1
 data2["key"] = 1
 
+## Joining objects and creatign relations like angles, isSameRow, isSameColumn
+############
 result = pd.merge(data, data2, on="key").drop("key", 1)
 result = result[result["_id_x"] < result["_id_y"]]
 
@@ -75,8 +80,10 @@ result["same_column"] = result.apply(
     else "0",
     axis=1,
 )
-sameRowColumn = result.copy()
 
+## New dataframe for checking isSameRow or isSameColumn
+################
+sameRowColumn = result.copy()
 sameRowColumn = sameRowColumn.drop(
     columns=[
         "x1_x",
@@ -114,8 +121,10 @@ sameRowColumn = sameRowColumn.drop(
         "center_angle",
     ]
 )
+###############
 
-
+## New dataframe to getting object ids after clustering
+#####################
 only_id = result.drop(
     columns=[
         "leftUpCorner_x",
@@ -153,8 +162,9 @@ only_id = result.drop(
         "y2_y",
     ]
 )
-
-
+###################
+### calculating angles and distances for every corner, column and center
+##################
 for a in range(9):
     first = ""
     first_lst = [
@@ -215,6 +225,7 @@ for a in range(9):
             np.array(result[angle_name]).reshape(-1, 1)
         )
 
+## Eliminating unnecessary features before DBSCAN
 result = result.drop(
     columns=[
         "_id_x",
@@ -252,11 +263,13 @@ result = result.drop(
         "y2_y",
     ]
 )
-
+#######################
+#### Applying clustering
 clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
 
 only_id["labels"] = clustering.labels_
 clusters = [None] * len(set(clustering.labels_))
+### getting which objects are in which clusters after DBSCAN
 for x in range(len(set(clustering.labels_))):
     clusters[x] = []
 
@@ -264,8 +277,9 @@ for i in range(len(only_id)):
     clusters[only_id["labels"].values[i]].append(
         [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
     )
-
+############
 # SCORING
+## Scoring will be applied to decide which box in which cluster if needed(in the situations if heuristics can not decide for an object in which cluster)
 
 scoringDict = {}
 
@@ -295,9 +309,6 @@ for boxId in scoringDict:
     )
     scoringDict[boxId] = sortedArr
 
-# pprint(scoringDict)
-
-# /SCORING
 
 cluster_ids = []
 for i in range(len(clusters)):
