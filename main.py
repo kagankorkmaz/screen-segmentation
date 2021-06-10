@@ -446,7 +446,6 @@ for clst in cluster_ids:
         real_clusters.append(clst)
         real_cluster_ids.append(clstid)
     clstid = clstid + 1
-print("remaining clusters = " + str(len(real_clusters)))
 
 # real_clusters is the list that we have after the elimination
 
