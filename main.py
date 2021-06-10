@@ -478,11 +478,17 @@ print("After eliminating clusters due to their bounding boxes, the cluster size 
 # Check the clusters. 
 # If all the elements of the cluster are in the same row
 # Take take cluster as a finalized cluster and add it to final_clusters list
-
+data = data.drop(columns=['x1', 'x2', 'y1', 'y2', '_id', 'x', 'y', 'leftUpCorner',
+       'rightUpCorner', 'leftBottomCorner', 'rightBottomCorner',
+       'topEdgeCenter', 'BottomEdgeCenter', 'leftEdgeCenter',
+       'rightEdgeCenter', 'center', 'key'])
+tree_view_clst = []
 new_list_index = 0
 for clst in new_list:
     sameRow = True
+    upperclst = []
     for i in range(len(clst)):
+        lowerclst = []
         for j in range(i + 1, len(clst)):
             if isSameRow(clst[i], clst[j]):
                 continue
@@ -493,6 +499,12 @@ for clst in new_list:
             break
     new_list_index += 1
     if sameRow == True:
+        insideclst = []
+        for i in range(len(clst)):
+            insdclst = []
+            insdclst.append(clst[i])
+            insideclst.append(insdclst)
+        tree_view_clst.append(insideclst)
         final_clusters.append(clst)
     if (new_list_index == len(new_list)):
         break
@@ -508,6 +520,7 @@ print("****************************")
 
 for a in range(len(new_list)):
     huri = []
+    instree = []
     sameLength = False
     for b in range(a + 1, len(new_list)):
         if len(new_list[a]) == len(new_list[b]):
@@ -520,11 +533,28 @@ for a in range(len(new_list)):
         for i in clsta:
             for j in clstb:
                 if isSameRow(i, j):
+                    insdclst = []
+                    if(data['inside'].iloc[i-1] == data['inside'].iloc[j-1]):
+                        idclst1 = []
+                        idclst2 = []
+                        idclst1.append(i)
+                        idclst2.append(j)
+                        instree.append(idclst2)
+                        instree.append(idclst1)
+                    else:
+                        idclst1 = []
+                        idclst2 = []
+                        idclst1.append(i)
+                        idclst2.append(j)
+                        insdclst.append(idclst2)
+                        insdclst.append(idclst1)
+                        instree.append(insdclst)
                     huri.append(i)
                     huri.append(j)
     if huri == []:
         continue
     huri.sort()
+    tree_view_clst.append(instree)
     final_clusters.append(huri)
 
 print("\nAfter the second heuristic we get the following finalized clusters: ")
@@ -554,16 +584,36 @@ for element in item:
         unknown.append(element)
 # the list "unknown" has those uncaptured objects
 for i in range(len(unknown)):
+    instree = []
     for j in range(i + 1, len(unknown)):
         new_cluster = []
         if isSameRow(unknown[i], unknown[j]):
             new_cluster.append(unknown[i])
             new_cluster.append(unknown[j])
             new_cluster.sort()
+            insdclst = []
+            if(data['inside'].iloc[i-1] == data['inside'].iloc[j-1]):
+                idclst1 = []
+                idclst2 = []
+                idclst1.append(i)
+                idclst2.append(j)
+                instree.append(idclst1)
+                instree.append(idclst2)
+            else:
+                idclst1 = []
+                idclst2 = []
+                idclst1.append(i)
+                idclst2.append(j)
+                insdclst.append(idclst1)
+                insdclst.append(idclst2)
+                instree.append(insdclst)
             final_clusters.append(new_cluster)
+            tree_view_clst.append(instree)
         else:
             final_clusters.append([unknown[i]])
-            final_clusters.append([unknown[j]])      
+            final_clusters.append([unknown[j]]) 
+            tree_view_clst.append([unknown[i]])   
+            tree_view_clst.append([unknown[j]])   
 
 print("\nAfter the third heuristic we get the following finalized clusters: ")
 print(final_clusters)
@@ -595,5 +645,7 @@ for i in range(len(fclstid)):
     print("****************************")
     print(str(i+1) + "th cluster: " + str(final_clusters[fclstid[i][0]]))
 print("****************************")
+print("root level: UI")
 
+print(tree_view_clst)
 quit()
