@@ -11,28 +11,32 @@ import os
 from collections import Counter, defaultdict, OrderedDict
 
 
-## Reading data
+# Reading data
 dataPath = "./data/kodi-base.csv"
 dataOrg = pd.read_csv(dataPath)
 data = dataOrg.copy()
 
-## Calculating Corners, edges and cetnre values
+# Calculating Corners, edges and cetnre values
 ############
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
 data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
-data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
-data["leftBottomCorner"] = data.apply(lambda row: [row.x1, row.y1 + row.height], axis=1)
+data["rightUpCorner"] = data.apply(
+    lambda row: [row.x1 + row.width, row.y1], axis=1)
+data["leftBottomCorner"] = data.apply(
+    lambda row: [row.x1, row.y1 + row.height], axis=1)
 data["rightBottomCorner"] = data.apply(
     lambda row: [row.x1 + row.width, row.y1 + row.height], axis=1
 )
 corners = data.copy()
 corners = corners.drop(
-    columns=["x1", "x2", "y1", "y2", "inside", "width", "height", "_id", "x", "y"]
+    columns=["x1", "x2", "y1", "y2", "inside",
+             "width", "height", "_id", "x", "y"]
 )
 
-data["topEdgeCenter"] = data.apply(lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
+data["topEdgeCenter"] = data.apply(
+    lambda row: [row.x1 + row.width / 2, row.y1], axis=1)
 data["BottomEdgeCenter"] = data.apply(
     lambda row: [row.x1 + row.width / 2, row.y1 + row.height], axis=1
 )
@@ -52,13 +56,14 @@ data2 = data.copy()
 data["key"] = 1
 data2["key"] = 1
 
-## Joining objects and creatign relations like angles, isSameRow, isSameColumn
+# Joining objects and creatign relations like angles, isSameRow, isSameColumn
 ############
 result = pd.merge(data, data2, on="key").drop("key", 1)
 result = result[result["_id_x"] < result["_id_y"]]
 
 result["center_angle"] = result.apply(
-    lambda row: np.rad2deg(np.arctan2((row.y_x - row.y_y), (row.x1_x - row.x1_y))),
+    lambda row: np.rad2deg(np.arctan2(
+        (row.y_x - row.y_y), (row.x1_x - row.x1_y))),
     axis=1,
 )
 
@@ -75,7 +80,7 @@ result["same_column"] = result.apply(
     axis=1,
 )
 
-## New dataframe for checking isSameRow or isSameColumn
+# New dataframe for checking isSameRow or isSameColumn
 ################
 sameRowColumn = result.copy()
 sameRowColumn = sameRowColumn.drop(
@@ -117,7 +122,7 @@ sameRowColumn = sameRowColumn.drop(
 )
 ###############
 
-## New dataframe to getting object ids after clustering
+# New dataframe to getting object ids after clustering
 #####################
 only_id = result.drop(
     columns=[
@@ -157,7 +162,7 @@ only_id = result.drop(
     ]
 )
 ###################
-### calculating angles and distances for every corner, column and center
+# calculating angles and distances for every corner, column and center
 ##################
 for a in range(9):
     first = ""
@@ -198,8 +203,10 @@ for a in range(9):
         for c in range(len(result.index)):
             ls.append(
                 math.sqrt(
-                    pow((result[first].iloc[c][0] - result[second].iloc[c][0]), 2)
-                    + pow((result[first].iloc[c][1] - result[second].iloc[c][1]), 2)
+                    pow((result[first].iloc[c][0] -
+                         result[second].iloc[c][0]), 2)
+                    + pow((result[first].iloc[c][1] -
+                           result[second].iloc[c][1]), 2)
                 )
             )
             ls_angle.append(
@@ -219,7 +226,7 @@ for a in range(9):
             np.array(result[angle_name]).reshape(-1, 1)
         )
 
-## Eliminating unnecessary features before DBSCAN
+# Eliminating unnecessary features before DBSCAN
 result = result.drop(
     columns=[
         "_id_x",
@@ -258,12 +265,12 @@ result = result.drop(
     ]
 )
 #######################
-#### Applying clustering
+# Applying clustering
 clustering = DBSCAN(eps=0.5, min_samples=2).fit(result)
 
 only_id["labels"] = clustering.labels_
 clusters = [None] * len(set(clustering.labels_))
-### getting which objects are in which clusters after DBSCAN
+# getting which objects are in which clusters after DBSCAN
 for x in range(len(set(clustering.labels_))):
     clusters[x] = []
 
@@ -278,7 +285,7 @@ print(
 )
 ############
 # SCORING
-## Scoring will be applied to decide which box in which cluster if needed(in the situations if heuristics can not decide for an object in which cluster)
+# Scoring will be applied to decide which box in which cluster if needed(in the situations if heuristics can not decide for an object in which cluster)
 
 scoringDict = {}
 
@@ -319,7 +326,7 @@ for i in range(len(clusters)):
             idlst.append(tup[1])
     cluster_ids.append(idlst)
 
-##################### Get bounding boxes for clusters
+# Get bounding boxes for clusters
 cluster_coords = (
     []
 )  # list of lists, for each cluster inner lists have [leftUpCorner, rightUpCorner, leftBottomCorner, rightBottomCorner] coordinates in order
@@ -371,7 +378,9 @@ for clst in cluster_ids:
     coord.append(coordrightdown)
     cluster_coords.append(coord)
 
-##################### In order to check whether two bounding box are colliding or not
+# In order to check whether two bounding box are colliding or not
+
+
 def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
 
     # To check if either rectangle is actually a line
@@ -392,7 +401,7 @@ def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
     return True
 
 
-################ To check if one bounding box is inside of other
+# To check if one bounding box is inside of other
 def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
     if (
         (l2x <= l1x and l1x <= r2x)
@@ -404,8 +413,8 @@ def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
     return False
 
 
-############## Below we look at the clusters and their bounding boxes, if there is an object which is not an element of the cluster,
-############## but inside/overlapping the bounding box of the cluster, we eliminate that cluster
+# Below we look at the clusters and their bounding boxes, if there is an object which is not an element of the cluster,
+# but inside/overlapping the bounding box of the cluster, we eliminate that cluster
 real_clusters = []
 real_cluster_ids = []
 clstid = 0
@@ -439,7 +448,7 @@ for clst in cluster_ids:
     clstid = clstid + 1
 print("remaining clusters = " + str(len(real_clusters)))
 
-## real_clusters is the list that we have after the elimination
+# real_clusters is the list that we have after the elimination
 
 # We sort the clusters based on the element ids, in an incremental order, in place sort
 for clst in real_clusters:
@@ -481,7 +490,7 @@ print(
     + str(len(new_list))
     + "\n"
 )
-############ 1ST HEURISTIC
+# 1ST HEURISTIC
 # Check the clusters.
 # If all the elements of the cluster are in the same row
 # Take take cluster as a finalized cluster and add it to final_clusters list
@@ -536,7 +545,7 @@ print("After the first heuristic we get following finalized clusters: ")
 print(final_clusters)
 print("****************************")
 
-############ 2ND HEURISTIC
+# 2ND HEURISTIC
 # Take each cluster, compare them by their lengths
 # If two clusters have same number of objects: Assumption, two clusters are represents two columns standing next to each other.
 # Compare each elements of these clusters and if two objects are in the same row, add them to another list
@@ -585,7 +594,7 @@ print("\nAfter the second heuristic we get the following finalized clusters: ")
 print(final_clusters)
 print("****************************")
 
-############ 3RD HEURISTIC
+# 3RD HEURISTIC
 # We observed that there are some objects missing in the clusters
 # We assume that if those missing elements are in the same row, they make a new cluster, so we add them to final_clusters
 # If those objects are not in the same row, we assume that they are seperate cluster of their own.
@@ -619,15 +628,15 @@ for i in range(len(unknown)):
             if data["inside"].iloc[i - 1] == data["inside"].iloc[j - 1]:
                 idclst1 = []
                 idclst2 = []
-                idclst1.append(i)
-                idclst2.append(j)
+                idclst1.append(unknown[i])
+                idclst2.append(unknown[j])
                 instree.append(idclst1)
                 instree.append(idclst2)
             else:
                 idclst1 = []
                 idclst2 = []
-                idclst1.append(i)
-                idclst2.append(j)
+                idclst1.append(unknown[i])
+                idclst2.append(unknown[j])
                 insdclst.append(idclst1)
                 insdclst.append(idclst2)
                 instree.append(insdclst)
@@ -643,7 +652,7 @@ print("\nAfter the third heuristic we get the following finalized clusters: ")
 print(final_clusters)
 print("****************************")
 
-############ 4TH HEURISTIC
+# 4TH HEURISTIC
 # Now that we seperated every object in a different cluster, we need to find their hierarchical order
 # Clusters' first elements give us the beginning of that region
 # In the UI's like the one in the KODI example, the region in the above is the parent region of the below
@@ -672,6 +681,7 @@ def print_nested(cl):
         else:
             return
 
+
 # Below we printed out the hierarchical order for the final clusters.
 print("\nHierarchical order for the finalized clusters after the 4th heuristic")
 for i in range(len(fclstid)):
@@ -679,28 +689,7 @@ for i in range(len(fclstid)):
     print(str(i + 1) + "th cluster: " + str(final_clusters[fclstid[i][0]]))
     cl = tree_view_clst[fclstid[i][0]]
     print_nested(cl)
-    
+
 print("****************************")
-print("root level: UI")
 
-# for i in range(len(tree_view_clst)):
-# pprint(tree_view_clst[i])
-# print("****************************")
-
-
-
-pprint(tree_view_clst)
 quit()
-
-for i in range(len(fclstid)):
-    cl = tree_view_clst[fclstid[i][0]]
-    print(str(i + 1) + "th cluster:", cl)
-    print_nested(cl)
-    # print(isinstance(cl,list))
-    # print(isinstance(cl[0], list))
-    # print(isinstance(cl[0][0], list))
-    # print(isinstance(cl[0][0][0], list))
-
-    print("****************************")
-
-
