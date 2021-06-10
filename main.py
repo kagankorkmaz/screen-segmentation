@@ -2,20 +2,14 @@ import pandas as pd
 import numpy as np
 import math
 import sklearn
-from sklearn import preprocessing
 from pprint import pprint
 from sklearn.preprocessing import MinMaxScaler
 
 # import tensorflow
 from sklearn.cluster import DBSCAN
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-from scipy import stats
-from sklearn.metrics import silhouette_samples, silhouette_score
-import matplotlib.cm as cm
-from yellowbrick.cluster import SilhouetteVisualizer
 import os
 from collections import Counter, defaultdict, OrderedDict
+
 
 ## Reading data
 dataPath = "./data/kodi-base.csv"
@@ -25,7 +19,7 @@ data = dataOrg.copy()
 ## Calculating Corners, edges and cetnre values
 ############
 data["x"] = data.apply(lambda row: (row.x1 + row.x2) / 2, axis=1)
-data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1) 
+data["y"] = data.apply(lambda row: (row.y1 + row.y2) / 2, axis=1)
 
 data["leftUpCorner"] = data.apply(lambda row: [row.x1, row.y1], axis=1)
 data["rightUpCorner"] = data.apply(lambda row: [row.x1 + row.width, row.y1], axis=1)
@@ -277,7 +271,11 @@ for i in range(len(only_id)):
     clusters[only_id["labels"].values[i]].append(
         [only_id["_id_x"].values[i], only_id["_id_y"].values[i]]
     )
-print("\nNumber of clusters obtained using dbscan clustering algorithm: "+ str(len(clusters)) + "\n")
+print(
+    "\nNumber of clusters obtained using dbscan clustering algorithm: "
+    + str(len(clusters))
+    + "\n"
+)
 ############
 # SCORING
 ## Scoring will be applied to decide which box in which cluster if needed(in the situations if heuristics can not decide for an object in which cluster)
@@ -322,7 +320,9 @@ for i in range(len(clusters)):
     cluster_ids.append(idlst)
 
 ##################### Get bounding boxes for clusters
-cluster_coords = [] # list of lists, for each cluster inner lists have [leftUpCorner, rightUpCorner, leftBottomCorner, rightBottomCorner] coordinates in order
+cluster_coords = (
+    []
+)  # list of lists, for each cluster inner lists have [leftUpCorner, rightUpCorner, leftBottomCorner, rightBottomCorner] coordinates in order
 for clst in cluster_ids:
     coord = []
     coordleftup = []
@@ -390,6 +390,7 @@ def doOverlap(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
         return False
 
     return True
+
 
 ################ To check if one bounding box is inside of other
 def isInside(l1x, l1y, r1x, r1y, l2x, l2y, r2x, r2y):
@@ -459,7 +460,7 @@ for clst in clusters_1:
 # Gets 2 object ids (_id_x and _id_y) .it checks sameRow['same_row'] value for a and b ids.
 # If the value is 1 return true else return false
 def isSameRow(a, b):
-    if (a < b):
+    if a < b:
         x = sameRowColumn.loc[sameRowColumn["_id_x"] == a]
         x = x.loc[x["_id_y"] == b]
         if x["same_row"].values[0] == "1":
@@ -473,15 +474,38 @@ def isSameRow(a, b):
             return True
         else:
             return False
-print("After eliminating clusters due to their bounding boxes, the cluster size is: " + str(len(new_list)) + "\n")
+
+
+print(
+    "After eliminating clusters due to their bounding boxes, the cluster size is: "
+    + str(len(new_list))
+    + "\n"
+)
 ############ 1ST HEURISTIC
-# Check the clusters. 
+# Check the clusters.
 # If all the elements of the cluster are in the same row
 # Take take cluster as a finalized cluster and add it to final_clusters list
-data = data.drop(columns=['x1', 'x2', 'y1', 'y2', '_id', 'x', 'y', 'leftUpCorner',
-       'rightUpCorner', 'leftBottomCorner', 'rightBottomCorner',
-       'topEdgeCenter', 'BottomEdgeCenter', 'leftEdgeCenter',
-       'rightEdgeCenter', 'center', 'key'])
+data = data.drop(
+    columns=[
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "_id",
+        "x",
+        "y",
+        "leftUpCorner",
+        "rightUpCorner",
+        "leftBottomCorner",
+        "rightBottomCorner",
+        "topEdgeCenter",
+        "BottomEdgeCenter",
+        "leftEdgeCenter",
+        "rightEdgeCenter",
+        "center",
+        "key",
+    ]
+)
 tree_view_clst = []
 new_list_index = 0
 for clst in new_list:
@@ -506,7 +530,7 @@ for clst in new_list:
             insideclst.append(insdclst)
         tree_view_clst.append(insideclst)
         final_clusters.append(clst)
-    if (new_list_index == len(new_list)):
+    if new_list_index == len(new_list):
         break
 print("After the first heuristic we get following finalized clusters: ")
 print(final_clusters)
@@ -534,7 +558,7 @@ for a in range(len(new_list)):
             for j in clstb:
                 if isSameRow(i, j):
                     insdclst = []
-                    if(data['inside'].iloc[i-1] == data['inside'].iloc[j-1]):
+                    if data["inside"].iloc[i - 1] == data["inside"].iloc[j - 1]:
                         idclst1 = []
                         idclst2 = []
                         idclst1.append(i)
@@ -569,7 +593,7 @@ print("****************************")
 item = []
 huri2 = []
 for i in range(len(corners)):
-    item.append(i + 1) # object ids are starting from 1
+    item.append(i + 1)  # object ids are starting from 1
 unknown = []
 # we get all the object ids into huri2 list
 for ct in new_list:
@@ -592,7 +616,7 @@ for i in range(len(unknown)):
             new_cluster.append(unknown[j])
             new_cluster.sort()
             insdclst = []
-            if(data['inside'].iloc[i-1] == data['inside'].iloc[j-1]):
+            if data["inside"].iloc[i - 1] == data["inside"].iloc[j - 1]:
                 idclst1 = []
                 idclst2 = []
                 idclst1.append(i)
@@ -611,9 +635,9 @@ for i in range(len(unknown)):
             tree_view_clst.append(instree)
         else:
             final_clusters.append([unknown[i]])
-            final_clusters.append([unknown[j]]) 
-            tree_view_clst.append([unknown[i]])   
-            tree_view_clst.append([unknown[j]])   
+            final_clusters.append([unknown[j]])
+            tree_view_clst.append([unknown[i]])
+            tree_view_clst.append([unknown[j]])
 
 print("\nAfter the third heuristic we get the following finalized clusters: ")
 print(final_clusters)
@@ -633,19 +657,50 @@ fclstid = []
 for clst in final_clusters:
     clsttup = []
     clsttup.append(index)
-    clsttup.append(corners["leftUpCorner"].iloc[clst[0]-1][1])
+    clsttup.append(corners["leftUpCorner"].iloc[clst[0] - 1][1])
     index += 1
     fclstid.append(clsttup)
 # We sort the fclstid array based on the coordinates in an incremental order
 fclstid.sort(key=lambda tup: tup[1])
 
+
+def print_nested(cl):
+    for x in cl:
+        if isinstance(x, list):
+            pprint(x)
+            print_nested(x)
+        else:
+            return
+
 # Below we printed out the hierarchical order for the final clusters.
 print("\nHierarchical order for the finalized clusters after the 4th heuristic")
 for i in range(len(fclstid)):
     print("****************************")
-    print(str(i+1) + "th cluster: " + str(final_clusters[fclstid[i][0]]))
+    print(str(i + 1) + "th cluster: " + str(final_clusters[fclstid[i][0]]))
+    cl = tree_view_clst[fclstid[i][0]]
+    print_nested(cl)
+    
 print("****************************")
 print("root level: UI")
 
-print(tree_view_clst)
+# for i in range(len(tree_view_clst)):
+# pprint(tree_view_clst[i])
+# print("****************************")
+
+
+
+pprint(tree_view_clst)
 quit()
+
+for i in range(len(fclstid)):
+    cl = tree_view_clst[fclstid[i][0]]
+    print(str(i + 1) + "th cluster:", cl)
+    print_nested(cl)
+    # print(isinstance(cl,list))
+    # print(isinstance(cl[0], list))
+    # print(isinstance(cl[0][0], list))
+    # print(isinstance(cl[0][0][0], list))
+
+    print("****************************")
+
+
